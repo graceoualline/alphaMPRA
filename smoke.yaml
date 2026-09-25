@@ -1,0 +1,36 @@
+# AlphaGenome finetuned on the boda-preprocessed CODA episomal MPRA, one cell type per run.
+#
+#   python alphampra.py --config episomal_alphampra.yaml
+#
+# Anything here can be overridden on the command line, e.g. another cell type or a smoke run:
+#
+#   python alphampra.py --config episomal_alphampra.yaml --cell-type K562 -n episomal_alphampra_K562
+#   python alphampra.py --config episomal_alphampra.yaml --subset-frac 0.05 --num-epochs 1 -n smoke
+
+# Written by baseline_CODA/preprocess_malinois.py: 600bp flank-padded sequences, a split
+# column, and reverse complements plus duplicated top rows already in train
+data: /home/go274/scratch_pi_skr2/go274/manual_MPRA_models/baseline_CODA/malinois_all_data_filtered_revcomp_preprocessed.tsv
+cell_type: HepG2
+model_name: smoke
+
+# Local copy of the all_folds weights, used to reload the best checkpoint for the test plot
+base_checkpoint: /home/go274/scratch_pi_skr2/go274/coda_data/claude_playground/alphagenome_weights/all_folds
+output_dir: /home/go274/scratch_pi_skr2/go274/manual_MPRA_models/alphaMPRA/individual_episomal_alphampra
+
+construct_length: 600
+
+batch_size: 64
+subset_frac: 0.02
+seed: 42
+
+# Stage 1: head only, encoder frozen
+num_epochs: 1
+learning_rate: 0.001
+weight_decay: 0.000001
+early_stopping_patience: 5
+val_eval_frequency: 1
+
+# Stage 2: whole model from stage 1's best checkpoint. null trains stage 1 only
+second_stage_lr: 0.00001
+second_stage_epochs: 1
+gradient_accumulation_steps: 1

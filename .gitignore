@@ -1,0 +1,12 @@
+# third-party repos (clone separately)
+alphagenome_FT_MPRA/
+alphagenome_ft/
+
+# data and model weights
+*.tsv
+alphampra_checkpoints/
+individual_episomal_alphampra/checkpoints/
+
+# junk
+__pycache__/
+logs/
