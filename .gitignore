@@ -6,6 +6,7 @@ alphagenome_ft/
 *.tsv
 alphampra_checkpoints/
 individual_episomal_alphampra/checkpoints/
+multihead_episomal_alphampra/checkpoints/
 
 # junk
 __pycache__/

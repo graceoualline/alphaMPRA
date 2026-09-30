@@ -36,15 +36,20 @@ DEFAULTS = {
     'second_stage_lr': 1e-5,
     'second_stage_epochs': 50,
     'gradient_accumulation_steps': 1,
+    # training loop: False = alphagenome_ft_mpra ag_train, True = fast_train.py
+    'fast_train': False,
+    # several cell types, one mpra head each on the shared encoder, trained jointly (fast_train only).
+    # Set this or cell_type, not both
+    'heads': None,
 }
-REQUIRED = ('data', 'cell_type', 'model_name', 'base_checkpoint')
+REQUIRED = ('data', 'model_name', 'base_checkpoint')
 CELL_TYPES = ('K562', 'HepG2', 'SKNSH')
 
 
 @dataclass
 class Config:
     data: Path # boda-preprocessed tsv with split, sequence and <cell>_log2FC columns
-    cell_type: str # which <cell>_log2FC column this model predicts
+    cell_type: str # which <cell>_log2FC column a single-head model predicts; None when heads is set
     model_name: str # names the checkpoint folder and the test plot
     base_checkpoint: Path # local AlphaGenome all_folds weights, used to reload the best checkpoint
     output_dir: Path # checkpoints/<model_name>/ and the test plot land here
@@ -60,6 +65,19 @@ class Config:
     second_stage_lr: float # stage 2 learning rate; None trains stage 1 only
     second_stage_epochs: int # stage 2 maximum epochs
     gradient_accumulation_steps: int # raise if stage 2 runs out of GPU memory; keeps the effective batch
+    fast_train: bool # use fast_train.py (jitted step, encoder + head only) instead of ag_train
+    heads: list # cell types for a multi-head model, e.g. [K562, HepG2, SKNSH]; None for one head
+
+    @property
+    def cell_types(self):
+        """Cell type of each head, in head order."""
+        return list(self.heads) if self.heads else [self.cell_type]
+
+    @property
+    def head_names(self):
+        """'mpra_head' for a single-head model, so its checkpoints match ag_train's;
+        'mpra_head_<cell>' per head otherwise."""
+        return [f'mpra_head_{c}' for c in self.heads] if self.heads else ['mpra_head']
 
     @property
     def checkpoint_dir(self):
@@ -88,6 +106,10 @@ def parse_args():
     parser.add_argument("--second-stage-lr", dest="second_stage_lr", type=float, help="Stage 2 learning rate")
     parser.add_argument("--gradient-accumulation-steps", dest="gradient_accumulation_steps", type=int,
                         help="Split each batch into this many pieces for stage 2 memory")
+    parser.add_argument("--heads", nargs='+', choices=CELL_TYPES,
+                        help="Cell types for a multi-head model, one head each (needs --fast-train)")
+    parser.add_argument("--fast-train", dest="fast_train", action="store_true", default=None,
+                        help="Train with fast_train.py instead of ag_train")
     return parser.parse_args()
 
 
@@ -107,7 +129,15 @@ def build_config(args=None):
 
     missing = [key for key in REQUIRED if merged[key] is None]
     assert not missing, f"missing required config values: {missing}"
-    assert merged['cell_type'] in CELL_TYPES, f"cell_type must be one of {CELL_TYPES}, got {merged['cell_type']}"
+    assert (merged['cell_type'] is None) != (merged['heads'] is None), \
+        f"set exactly one of cell_type and heads, got {merged['cell_type']!r} and {merged['heads']!r}"
+    if merged['heads'] is None:
+        assert merged['cell_type'] in CELL_TYPES, f"cell_type must be one of {CELL_TYPES}, got {merged['cell_type']}"
+    else:
+        heads = merged['heads']
+        assert heads and all(h in CELL_TYPES for h in heads) and len(set(heads)) == len(heads), \
+            f"heads must be distinct cell types from {CELL_TYPES}, got {heads}"
+        assert merged['fast_train'], "heads (multi-head training) needs fast_train: true"
 
     # Fail here rather than after the model has loaded
     data_path = Path(merged['data'])
@@ -123,6 +153,8 @@ def build_config(args=None):
         f"second_stage_lr must be positive or null: {merged['second_stage_lr']}"
     assert merged['gradient_accumulation_steps'] >= 1 and merged['batch_size'] % merged['gradient_accumulation_steps'] == 0, \
         f"batch_size {merged['batch_size']} must split evenly into {merged['gradient_accumulation_steps']} accumulation steps"
+    assert not (merged['fast_train'] and merged['gradient_accumulation_steps'] != 1), \
+        "fast_train does not implement gradient accumulation"
 
     merged.update(data=data_path, base_checkpoint=base_checkpoint, output_dir=Path(merged['output_dir']))
     return Config(**merged)

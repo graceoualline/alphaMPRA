@@ -1,0 +1,16 @@
+
+For the input data, I preprocessed the Malinois data, adding the padded regions, reverse compliment, 
+removing oligos with high standard error, and duplicating oligos with high values. The preprocessed file
+is what is then fed to the model. 
+Script for prerpocessing: /home/go274/scratch_pi_skr2/go274/manual_MPRA_models/alphaMPRA/preprocess_malinois.py
+Data: /home/go274/scratch_pi_skr2/go274/manual_MPRA_models/alphaMPRA/malinois_all_data_filtered_revcomp_preprocessed.tsv
+
+For the alphampra code, I mainly took code from alphagenome_FT_MPRA/scripts/finetune_episomal_mpra.py
+
+
+In alphampra.py, the training was extremely slow, so I vibe coded a optimization to make training faster: /home/go274/scratch_pi_skr2/go274/manual_MPRA_models/alphaMPRA/fast_train.py
+To ensure the faster training is identical to the training defined by the authors, I ran the same smoke test before and after optimization to ensure 
+identical training. Main issue of training is likely the optmizer trrying to calculate weigths for the entire Alphagenome model instead of just the encoder
+
+
+parse_args is also entirely vibecoded
