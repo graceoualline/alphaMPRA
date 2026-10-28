@@ -1,3 +1,7 @@
+# is a claude-assisted speedup of the original alphaMPRA training regimine posted by the Koo lab
+# after recreated Koo lab results, had claude go through and optimize the trianing time by ensuring 
+# weigths that were not used in alphagenome stopped being updated
+# and enssured that the fast_train version produced identical results to the Koo lab version
 """Two-stage finetuning loop for the encoder-only MPRA model, with one jitted step per batch.
 
 Same schedule as alphagenome_ft_mpra.training.train (ag_train):

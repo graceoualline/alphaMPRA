@@ -1,3 +1,5 @@
+# preprocess malinois data, or episomal data in general
+
 import torch
 import lightning.pytorch as ptl
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor

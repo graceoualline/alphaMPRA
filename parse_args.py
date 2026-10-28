@@ -1,3 +1,4 @@
+# code to parse the .yaml files to initialize alphampra.py
 import argparse
 from dataclasses import dataclass
 from pathlib import Path

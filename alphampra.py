@@ -1,7 +1,8 @@
 # MPRA helpers (from alphagenome_FT_MPRA: https://github.com/Al-Murphy/alphagenome_FT_MPRA)
 
 # all code is mostly adapted from alphagenome_FT_MPRA/scripts/finetune_episomal_mpra.py
-
+# this is the base program to train all alphaMPRA style models, with a .yaml input detailing the
+# data, model heads, and amount of data that is wanted for each model.
 from __future__ import annotations
 import os
 from pathlib import Path
