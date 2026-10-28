@@ -1,6 +1,6 @@
 # alphaMPRA
 
-README is generated and updated continually by Opus 5.5 based on contents of the repo. Please read with caution.
+README is generated and updated continually by Opus 5.5 based on contents of the repo.
 
 AlphaGenome's sequence encoder fine-tuned to predict episomal MPRA activity (log2FC) in K562, HepG2
 and SK-N-SH, trained on the CODA / Gosai et al. 2024 data preprocessed exactly as Malinois sees it.
